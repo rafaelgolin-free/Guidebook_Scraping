@@ -1,0 +1,18 @@
+{
+  "name": "hostfully-scraper",
+  "version": "1.0.0",
+  "description": "Web scraper for Hostfully guest print preview content",
+  "main": "scraper.js",
+  "scripts": {
+    "start": "node scraper.js",
+    "install-deps": "npm install"
+  },
+  "dependencies": {
+    "puppeteer-core": "^24.18.0",
+    "@sparticuz/chromium": "^138.0.2"
+  },
+  "keywords": ["scraping", "puppeteer", "hostfully"],
+  "author": "",
+  "license": "MIT"
+}
+
