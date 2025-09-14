@@ -12,9 +12,25 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Only allow GET and POST requests
-  if (req.method !== "GET" && req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  // Only allow POST requests
+  if (req.method !== "POST") {
+    return res
+      .status(405)
+      .json({
+        error:
+          "Method not allowed. Please use POST with guidebookId in request body.",
+      });
+  }
+
+  // Extract guidebookId from request body
+  const { guidebookId } = req.body;
+
+  // Validate guidebookId
+  if (!guidebookId) {
+    return res.status(400).json({
+      error: "guidebookId is required in request body",
+      example: { guidebookId: "gmfftsx" },
+    });
   }
 
   let browser;
@@ -40,8 +56,11 @@ export default async function handler(req, res) {
 
     console.log("📄 Navigating to the target page...");
 
-    // Navigate to the target URL
-    await page.goto("https://v2.hostfully.com/gmfftsx/print", {
+    // Navigate to the target URL using dynamic guidebookId
+    const targetUrl = `https://v2.hostfully.com/${guidebookId}/print`;
+    console.log(`🎯 Navigating to: ${targetUrl}`);
+
+    await page.goto(targetUrl, {
       waitUntil: "networkidle2",
       timeout: 30000,
     });
