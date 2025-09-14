@@ -12,14 +12,23 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // Parse JSON body for POST requests
+  if (req.method === "POST") {
+    try {
+      req.body = JSON.parse(req.body || "{}");
+    } catch (error) {
+      return res.status(400).json({
+        error: "Invalid JSON in request body",
+      });
+    }
+  }
+
   // Only allow POST requests
   if (req.method !== "POST") {
-    return res
-      .status(405)
-      .json({
-        error:
-          "Method not allowed. Please use POST with guidebookId in request body.",
-      });
+    return res.status(405).json({
+      error:
+        "Method not allowed. Please use POST with guidebookId in request body.",
+    });
   }
 
   // Extract guidebookId from request body
