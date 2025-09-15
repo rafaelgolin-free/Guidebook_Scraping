@@ -108,7 +108,6 @@ export default async function handler(req, res) {
         success: true,
         data: {
           innerText: content.innerText,
-          innerHTML: content.innerHTML,
           timestamp: new Date().toISOString(),
         },
       });
