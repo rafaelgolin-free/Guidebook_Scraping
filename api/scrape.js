@@ -1,15 +1,10 @@
 const puppeteer = require("puppeteer-core");
 const chromium = require("@sparticuz/chromium");
-const formidable = require("formidable");
 
 export default async function handler(req, res) {
-  // Ensure req.body exists
-  if (!req.body) {
-    req.body = {};
-  }
   // Set CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   // Handle preflight requests
@@ -17,68 +12,33 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Parse request body for POST requests
-  if (req.method === "POST") {
-    // Handle both JSON and form data
-    if (req.headers["content-type"]?.includes("application/json")) {
-      try {
-        req.body = JSON.parse(req.body || "{}");
-      } catch (error) {
-        return res.status(400).json({
-          error: "Invalid JSON in request body",
-        });
-      }
-    } else if (req.headers["content-type"]?.includes("multipart/form-data")) {
-      // Parse multipart/form-data using formidable
-      try {
-        const form = formidable({});
-        const [fields] = await form.parse(req);
-
-        // Convert formidable fields to regular object
-        req.body = {};
-        for (const [key, value] of Object.entries(fields)) {
-          req.body[key] = Array.isArray(value) ? value[0] : value;
-        }
-      } catch (error) {
-        return res.status(400).json({
-          error: "Failed to parse form data",
-          details: error.message,
-        });
-      }
-    }
-  }
-
-  // Only allow POST requests
-  if (req.method !== "POST") {
+  // Only allow GET requests
+  if (req.method !== "GET") {
     return res.status(405).json({
       error:
-        "Method not allowed. Please use POST with guidebookId in request body.",
+        "Method not allowed. Please use GET with guidebookId as query parameter.",
     });
   }
 
   // Debug logging
   console.log("Request details:", {
     method: req.method,
-    contentType: req.headers["content-type"],
-    bodyExists: !!req.body,
-    bodyKeys: req.body ? Object.keys(req.body) : "none",
-    body: req.body,
+    query: req.query,
+    guidebookId: req.query.guidebookId,
   });
 
-  // Extract guidebookId from request body (works for both JSON and form data)
-  const { guidebookId } = req.body;
+  // Extract guidebookId from query parameters
+  const { guidebookId } = req.query;
 
   // Validate guidebookId
   if (!guidebookId) {
     return res.status(400).json({
-      error: "guidebookId is required in request body",
-      example: { guidebookId: "gmfftsx" },
-      note: "For Make.com, send as form field 'guidebookId' with value like 'gmfftsx'",
+      error: "guidebookId is required as query parameter",
+      example: "?guidebookId=gmfftsx",
+      note: "Add guidebookId as a query parameter in the URL",
       debug: {
-        contentType: req.headers["content-type"],
-        bodyExists: !!req.body,
-        bodyKeys: req.body ? Object.keys(req.body) : "none",
-        body: req.body,
+        query: req.query,
+        guidebookId: req.query.guidebookId,
       },
     });
   }
