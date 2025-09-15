@@ -12,15 +12,20 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Parse JSON body for POST requests
+  // Parse request body for POST requests
   if (req.method === "POST") {
-    try {
-      req.body = JSON.parse(req.body || "{}");
-    } catch (error) {
-      return res.status(400).json({
-        error: "Invalid JSON in request body",
-      });
+    // Handle both JSON and form data
+    if (req.headers["content-type"]?.includes("application/json")) {
+      try {
+        req.body = JSON.parse(req.body || "{}");
+      } catch (error) {
+        return res.status(400).json({
+          error: "Invalid JSON in request body",
+        });
+      }
     }
+    // For form data (multipart/form-data), req.body is already parsed by Vercel
+    // No additional parsing needed
   }
 
   // Only allow POST requests
@@ -31,7 +36,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // Extract guidebookId from request body
+  // Extract guidebookId from request body (works for both JSON and form data)
   const { guidebookId } = req.body;
 
   // Validate guidebookId
@@ -39,6 +44,7 @@ export default async function handler(req, res) {
     return res.status(400).json({
       error: "guidebookId is required in request body",
       example: { guidebookId: "gmfftsx" },
+      note: "For Make.com, send as form field 'guidebookId' with value like 'gmfftsx'",
     });
   }
 
