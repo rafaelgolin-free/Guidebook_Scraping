@@ -1,7 +1,12 @@
 const puppeteer = require("puppeteer-core");
 const chromium = require("@sparticuz/chromium");
+const formidable = require("formidable");
 
 export default async function handler(req, res) {
+  // Ensure req.body exists
+  if (!req.body) {
+    req.body = {};
+  }
   // Set CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -23,9 +28,24 @@ export default async function handler(req, res) {
           error: "Invalid JSON in request body",
         });
       }
+    } else if (req.headers["content-type"]?.includes("multipart/form-data")) {
+      // Parse multipart/form-data using formidable
+      try {
+        const form = formidable({});
+        const [fields] = await form.parse(req);
+
+        // Convert formidable fields to regular object
+        req.body = {};
+        for (const [key, value] of Object.entries(fields)) {
+          req.body[key] = Array.isArray(value) ? value[0] : value;
+        }
+      } catch (error) {
+        return res.status(400).json({
+          error: "Failed to parse form data",
+          details: error.message,
+        });
+      }
     }
-    // For form data (multipart/form-data), req.body is already parsed by Vercel
-    // No additional parsing needed
   }
 
   // Only allow POST requests
@@ -36,6 +56,15 @@ export default async function handler(req, res) {
     });
   }
 
+  // Debug logging
+  console.log("Request details:", {
+    method: req.method,
+    contentType: req.headers["content-type"],
+    bodyExists: !!req.body,
+    bodyKeys: req.body ? Object.keys(req.body) : "none",
+    body: req.body,
+  });
+
   // Extract guidebookId from request body (works for both JSON and form data)
   const { guidebookId } = req.body;
 
@@ -45,6 +74,12 @@ export default async function handler(req, res) {
       error: "guidebookId is required in request body",
       example: { guidebookId: "gmfftsx" },
       note: "For Make.com, send as form field 'guidebookId' with value like 'gmfftsx'",
+      debug: {
+        contentType: req.headers["content-type"],
+        bodyExists: !!req.body,
+        bodyKeys: req.body ? Object.keys(req.body) : "none",
+        body: req.body,
+      },
     });
   }
 
